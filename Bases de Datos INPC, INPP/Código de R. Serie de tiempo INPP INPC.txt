@@ -1,0 +1,151 @@
+library(fpp2)
+Dat_INPP <- read.csv("INPP.csv", header = FALSE)
+
+#pdf("Serie de tiempo del INPP.pdf")
+ST_INPP <- ts(Dat_INPP, start = c(2008, 1), frequency = 12)
+autoplot(ST_INPP) +
+  labs(title = "Serie de tiempo del INPP",
+       x = "Tiempo",
+       y = "Costo",
+       colour = "#00a0dc") +
+  theme_bw()
+#dev.off()
+
+######
+Dat_INPC <- read.csv("INPC.csv", header = FALSE)
+
+#pdf("Serie de tiempo del INPC.pdf")
+ST_INPC <- ts(Dat_INPC, start = c(2008, 1), frequency = 12)
+autoplot(ST_INPC) +
+  labs(title = "Serie de tiempo del INPC",
+       x = "Tiempo",
+       y = "Costo",
+       colour = "#00a0dc") +
+  theme_bw()
+#dev.off()
+
+
+#################################################
+#Auto.Arima
+M1_INPC <- auto.arima(ST_INPC)
+summary(M1_INPC)
+
+#Suavizado exponencial
+M2_INPC <- ets(ST_INPC)
+summary(M2_INPC)
+
+#Regresión
+M3_INPC <- tslm(ST_INPC~ trend + season)
+summary(M3)
+AIC_fit3 <- AIC(M3_INPC)
+BIC_fit3 <- BIC(M3_INPC)
+k <- length(coef(M3_INPC))
+n <- length(residuals(M3_INPC))
+AICc_fit3 <- AIC(M3_INPC) + 2 * k * (k + 1) / (n - k - 1)
+AIC_fit3; BIC_fit3; AICc_fit3
+
+#Holt Winters
+M4_INPC <- hw(ST_INPC)
+summary(M4_INPC)
+
+
+#################################################
+Box.test(residuals(M1_INPC), type = "Ljung-Box")
+#pdf("Grafica. Res Arima INPC.pdf")
+plot.ts(residuals(M1_INPC), main="Residuales del modelo SARIMA", xlab="Tiempo", ylab="Residuales")
+#dev.off()
+
+Box.test(residuals(M2_INPC), type = "Ljung-Box")
+#pdf("Grafica. Res Suavizado INPC.pdf")
+plot.ts(residuals(M2_INPC), main="Residuales del modelo suavizado exponencial", xlab="Tiempo", ylab="Residuales")
+#dev.off()
+
+Box.test(residuals(M3_INPC), type = "Ljung-Box")
+#pdf("Grafica. Res Regresión INPC.pdf")
+plot.ts(residuals(M3_INPC), main="Residuales del método regresión", xlab="Tiempo", ylab="Residuales")
+#dev.off()
+
+Box.test(residuals(M4_INPC), type = "Ljung-Box")
+#pdf("Grafica. Res HoltWinters INPC.pdf")
+plot.ts(residuals(M4_INPC), main="Residuales del método holt winters", xlab="Tiempo", ylab="Residuales")
+#dev.off()
+
+
+#################################################
+#pdf("Check1 INPC.pdf")
+checkresiduals(M1_INPC)
+#dev.off()
+
+
+#################################################
+res <- forecast(M1_INPC, h=24); res
+#pdf("Grafica. Predicción INPC.pdf")
+autoplot(res) +
+  labs(title = "Pronóstico de la serie temporal para INPC",
+       x = "Tiempo",
+       y = "Valor",
+       colour = "blue") +
+  theme_minimal()
+#dev.off()
+
+
+#################################################
+#Auto.Arima
+M1_INPP <- auto.arima(ST_INPP)
+summary(M1_INPP)
+
+#Suavizado exponencial
+M2_INPP <- ets(ST_INPP)
+summary(M2_INPP)
+
+#Regresión
+M3_INPP <- tslm(ST_INPP~ trend + season)
+summary(M3_INPP)
+AIC_fit3 <- AIC(M3_INPP)
+BIC_fit3 <- BIC(M3_INPP)
+k <- length(coef(M3_INPP))
+n <- length(residuals(M3_INPP))
+AICc_fit3 <- AIC(M3_INPP) + 2 * k * (k + 1) / (n - k - 1)
+AIC_fit3; BIC_fit3; AICc_fit3
+
+#Holt Winters
+M4_INPP <- hw(ST_INPP)
+summary(M4_INPP)
+
+
+#################################################
+Box.test(residuals(M1_INPP), type = "Ljung-Box")
+#pdf("Grafica. Res Arima INPP.pdf")
+plot.ts(residuals(M1_INPP), main="Residuales del modelo SARIMA", xlab="Tiempo", ylab="Residuales")
+#dev.off()
+
+Box.test(residuals(M2_INPP), type = "Ljung-Box")
+#pdf("Grafica. Res Suavizado INPP.pdf")
+plot.ts(residuals(M2_INPP), main="Residuales del modelo suavizado exponencial", xlab="Tiempo", ylab="Residuales")
+#dev.off()
+
+Box.test(residuals(M3_INPP), type = "Ljung-Box")
+#pdf("Grafica. Res Regresión INPP.pdf")
+plot.ts(residuals(M3_INPP), main="Residuales del método regresión", xlab="Tiempo", ylab="Residuales")
+#dev.off()
+
+Box.test(residuals(M4_INPP), type = "Ljung-Box")
+#pdf("Grafica. Res HoltWinters INPP.pdf")
+plot.ts(residuals(M4_INPP), main="Residuales del método holt winters", xlab="Tiempo", ylab="Residuales")
+#dev.off()
+
+
+#################################################
+#pdf("Check1 INPP.pdf")
+checkresiduals(M1_INPP)
+#dev.off()
+
+res <- forecast(M1_INPP, h=24); res
+#pdf("Grafica. Predicción INPP.pdf")
+autoplot(res) +
+  labs(title = "Pronóstico de la serie temporal para INPP",
+       x = "Tiempo",
+       y = "Valor",
+       colour = "blue") +
+  theme_minimal()
+#dev.off()

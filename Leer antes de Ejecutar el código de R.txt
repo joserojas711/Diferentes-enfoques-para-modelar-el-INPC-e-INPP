@@ -1,0 +1,7 @@
+1. Por favor, asegúrese de cambiar la ruta en la consola de R a la ubicación donde se encuentran los archivos INPP.csv e INPC.csv.
+
+2. Respecto a las líneas comentadas:
+   pdf("")
+   dev.off()
+
+Estas líneas de código generan un archivo .pdf con el gráfico producido por el código encerrado entre ellas, en la ruta especificada en el primer paso. Si desea que se creen estos archivos PDF, por favor, descomente las líneas comentadas.

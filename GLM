@@ -1,1 +1,103 @@
+Código de R
 
+
+library(ggplot2)
+library(MASS)
+################################################
+
+
+#BASE DE DATOS
+data(discoveries)
+disc <- data.frame(count = as.numeric(discoveries), year = seq(0, (length(discoveries) - 1)))
+
+#GRÁFICO DE DISPERSIÓN
+plot(disc$year, disc$count)
+
+#ESTIMACIÓN DEL MODELO POISSON
+yearSqr <- disc$year^2
+p1 <- glm(count ~ year + yearSqr, family = "poisson", data = disc)
+summary(p1)
+
+#PREDICCIONES DEL MODELO
+new_data <- data.frame(year = seq(0, (length(discoveries) - 1)))
+new_data$yearSqr <- new_data$year^2
+
+#GRÁFICO MODELO AJUSTADO
+predicted_counts <- predict(p1, newdata = new_data, type = "response")
+plot(disc$year, disc$count, type = "b", ylim = c(0, max(disc$count, predicted_counts)),
+     xlab = "Year", ylab = "Discoveries", main = "Ajuste Poisson Modelo Lineal General")
+lines(new_data$year, predicted_counts, col = "red", lwd = 2)
+legend("topright", legend = c("Observed", "Predicted"), col = c("black", "red"), lty = 1, lwd = 2)
+
+#PROBABILIDAD HIPOTESIS
+1 - pchisq(deviance(p1), df.residual(p1))
+drop1(p1, test = "F")
+
+
+################################################
+
+#ESTIMACIÓN DEL MODELO QUASI-POISSON
+p2 <- glm(count ~ year + yearSqr, family = "quasipoisson", data = disc)
+summary(p2)
+
+#PREDICCIONES DEL MODELO & GRÁFICO MODELO AJUSTADO
+predicted_counts_p2 <- predict(p2, newdata = new_data, type = "response")
+plot(disc$year, disc$count, type = "b", ylim = c(0, max(disc$count, predicted_counts_p2)),
+     xlab = "Year", ylab = "Discoveries", main = "Ajuste Quasi-Poisson Modelo Lineal General")
+lines(new_data$year, predicted_counts_p2, col = "blue", lwd = 2)
+legend("topright", legend = c("Observed", "Predicted (Quasipoisson)"), col = c("black", "blue"), lty = 1, lwd = 2)
+
+#GRÁFICO DE VARIANZA
+p1Diag <- data.frame(disc,
+                     link = predict(p1, type = "link"),
+                     fit = predict(p1, type = "response"),
+                     pearson = residuals(p1, type = "pearson"),
+                     resid = residuals(p1, type = "response"),
+                     residSqr = residuals(p1, type = "response")^2
+                     )
+
+ggplot(p1Diag, aes(x = fit, y = residSqr)) + geom_point() + geom_abline(intercept = 0, slope = 1, size = 1) +
+       geom_abline(intercept = 0, slope = summary(p2)$dispersion, color = "darkgreen", linetype = 2, size = 1) +
+       geom_smooth(se = F, size = 1) + theme_bw() 
+
+
+###################################################
+
+
+#ESTIMACIÓN DEL MODELO BINOMIAL NEGATIVA
+nb1 <- glm.nb(count ~ year + yearSqr, data = disc)
+summary(nb1)
+
+
+#PREDICCIONES DEL MODELO & GRÁFICO MODELO AJUSTADO
+predicted_counts_nb1 <- predict(nb1, newdata = new_data, type = "response")
+plot(disc$year, disc$count, type = "b", ylim = c(0, max(disc$count, predicted_counts_nb1)),
+     xlab = "Year", ylab = "Discoveries", main = "Ajuste Binomial Negativa Modelo Lineal General")
+lines(new_data$year, predicted_counts_nb1, col = "green", lwd = 2)
+legend("topright", legend = c("Observed", "Predicted (Negative Binomial)"), col = c("black", "green"), lty = 1, lwd = 2)
+
+#ANÁLISIS DE SIGNIFICANCIA
+drop1(nb1, test = "LRT")
+
+
+#GRÁFICO DE VARIANZA
+nb1Diag <- data.frame(disc,
+                     link = predict(nb1, type = "link"),
+                     fit = predict(nb1, type = "response"),
+                     pearson = residuals(nb1,type = "pearson"),
+                     resid = residuals(nb1,type = "response"),
+                     residSqr = residuals(nb1,type = "response")^2
+                     )
+
+ggplot(nb1Diag, aes(x = fit, y = residSqr)) + geom_point() + geom_abline(intercept = 0, slope = 1, size = 1) +
+       geom_abline(intercept = 0, slope = summary(p2)$dispersion, color = "darkgreen", linetype = 2, size = 1) +
+       stat_function(fun = function(fit) {fit + fit^2 / 11.53}, color = "red", size = 1) +
+       geom_smooth(se = F, size = 1) + theme_bw() 
+
+
+#################################################################
+
+
+#PROBABILIDADES
+data.frame(number=0:8, prob_Poisson = round(dpois(0:8, (4*summary(p2)$dispersion)), 3),
+           prob_NBinom = round(dnbinom(0:8, mu=4, size=summary(nb1)$theta), 3))
